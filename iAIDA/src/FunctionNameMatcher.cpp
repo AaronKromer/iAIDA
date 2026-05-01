@@ -130,7 +130,8 @@ namespace fml
 	    int vval = 0;
 
 	    std::istringstream buf(str.c_str());
-	    bool ok = (buf >> vval);
+
+	    bool ok = static_cast<bool>(buf >> vval);
 	    if(!ok) return false;	    
 
 	    // assign the rest of the string to str

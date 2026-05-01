@@ -36,45 +36,40 @@ set(extIncDirs ${Boost_INCLUDE_DIR} "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DI
 set(extLibs    ${Boost_LIBRARIES} ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} )
 
 # we need the AIDA package
-configure_file(${PROJECT_SOURCE_DIR}/cmake/FindAIDA.cmake ${PROJECT_BINARY_DIR}/Modules/FindAIDA.cmake COPYONLY)
-include(${PROJECT_BINARY_DIR}/Modules/FindAIDA.cmake)
+#si potrebbe metterla direttamente in inclu
+file(GLOB aidaHeaders "${PROJECT_SOURCE_DIR}/ext/AIDA/*.h")
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/AIDA/)
+foreach(_hdr ${aidaHeaders} )
+  get_filename_component( Basename ${_hdr} NAME_WE )
+    configure_file(${_hdr} ${PROJECT_BINARY_DIR}/AIDA/${Basename}.h COPYONLY)
+endforeach()
+message("... AIDA installation not found ... using local headers")
 
-# ... copy the local AIDA includes if no AIDA is found
-if ( NOT AIDA_FOUND )
-  file(GLOB aidaHeaders "${PROJECT_SOURCE_DIR}/ext/AIDA/*.h")
-  file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/AIDA/)
-  foreach(_hdr ${aidaHeaders} )
-  	get_filename_component( Basename ${_hdr} NAME_WE )
-     	configure_file(${_hdr} ${PROJECT_BINARY_DIR}/AIDA/${Basename}.h COPYONLY)
-  endforeach()
-  message("... AIDA installation not found ... using local headers")
+# add the header files to the installation, if AIDA is not already installed:
+install(FILES    ${aidaHeaders} DESTINATION include/AIDA)
 
-  # add the header files to the installation, if AIDA is not already installed:
-  install(FILES    ${aidaHeaders} DESTINATION include/AIDA)
 
-else() # add include dirs from central installation:
-   include_directories( ${AIDA_INCLUDE_DIR}  )
-endif ( NOT AIDA_FOUND )
-
+# per il momento ignoro grace e root, grace non credo serva per il mio caso ROOT non so. 
 
 # and check for optional ones. These add their own params to the overall include dir and the optLibs variables:
 # but first check if the user has forbidden the use of any of these (e.g. for licensing reasons)
-foreach(_pkg ROOT Grace)
-  if ( NOT IAIDA_DO_NOT_USE_${_pkg} )
-    configure_file(${PROJECT_SOURCE_DIR}/cmake/Find${_pkg}.cmake ${PROJECT_BINARY_DIR}/Modules/Find${_pkg}.cmake COPYONLY)
-    include(${PROJECT_BINARY_DIR}/Modules/Find${_pkg}.cmake)
-  else ()
-    message( "... user request to ignore use of optional package "+${_pkg} )
-	if ( CMAKE_BUILD_TYPE MATCHES DEBUG ) 
-	   message( "... user request to ignore use of optional package "+${_pkg} )
-	endif ( CMAKE_BUILD_TYPE MATCHES DEBUG ) 
-  endif ( NOT IAIDA_DO_NOT_USE_${_pkg} )
-endforeach()  # check optional packages
+#foreach(_pkg ROOT Grace)
+#  if ( NOT IAIDA_DO_NOT_USE_${_pkg} )
+#    configure_file(${PROJECT_SOURCE_DIR}/cmake/Find${_pkg}.cmake ${PROJECT_BINARY_DIR}/Modules/Find${_pkg}.cmake COPYONLY)
+#    include(${PROJECT_BINARY_DIR}/Modules/Find${_pkg}.cmake)
+#  else ()
+#    message( "... user request to ignore use of optional package "+${_pkg} )
+#	if ( CMAKE_BUILD_TYPE MATCHES DEBUG ) 
+#	   message( "... user request to ignore use of optional package "+${_pkg} )
+#	endif ( CMAKE_BUILD_TYPE MATCHES DEBUG ) 
+#  endif ( NOT IAIDA_DO_NOT_USE_${_pkg} )
+#endforeach()  # check optional packages
 
+#script troppo vecchio, in caso da aggiornare
 
 # set up aida-config
-file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin/)
-configure_file(${PROJECT_SOURCE_DIR}/aida-config.in ${PROJECT_BINARY_DIR}/bin/aida-config)
+#file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin/)
+#configure_file(${PROJECT_SOURCE_DIR}/aida-config.in ${PROJECT_BINARY_DIR}/bin/aida-config)
 
 # set up common include directories and libs from externals and optional packages
 include_directories( ${PROJECT_BINARY_DIR} ${extIncDirs}  )
@@ -90,5 +85,5 @@ foreach(_dir src tests examples utilities)
 endforeach()
 
 # installation
-install(PROGRAMS ${PROJECT_BINARY_DIR}/bin/aida-config DESTINATION bin)
+#install(PROGRAMS ${PROJECT_BINARY_DIR}/bin/aida-config DESTINATION bin)
 install(DIRECTORY include src examples tests DESTINATION ${CMAKE_INSTALL_DOCDIR} )
